@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import './App.css'
 import Login from './pages/Login'
 import {
@@ -8,7 +7,9 @@ import {
   Navigate,
 } from "react-router-dom";
 import MentorLayout from './mentor/layout/MentorLayout';
-import HomePage from './pages/HomePage';
+
+import UserDashboard from './pages/UserDashboard';
+import VideoAnalyticsTracker from './components/VideoAnalyticsTracker';
 
 function App() {
 
@@ -16,12 +17,13 @@ function App() {
     <>
       <Router>
         <Routes>
-
-          <Route path="/" element={<HomePage />} />
+    <Route path="" index element={<VideoAnalyticsTracker />} />
+          <Route path="/dashboard" element={<UserDashboard />} />
           <Route path="/login" element={<Login />} />
           <Route path="/mentor" element={<MentorLayout />}>
             <Route path="*" element={<>dwla</>} />
           </Route>
+          
         </Routes>
       </Router>
     </>
