@@ -222,7 +222,7 @@ const VideoAnalyticsTracker = () => {
     console.log(`📊 VIDEO ANALYTICS - ${eventType.toUpperCase()}:`, {
       eventType,
       data,
-      videoSrc: 'video.mp4'
+      videoSrc: './video.mp4'
     });
   };
 
