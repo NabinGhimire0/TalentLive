@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use App\Models\CourseEnrollment;
@@ -53,7 +54,13 @@ class MMRService
         // Projects
         $projects = $user->projects()->where('status', 'completed')->get();
         foreach ($projects as $project) {
-            foreach ($project->skills ?? [] as $skillId) {
+            Log::info('Processing project skills', ['project_id' => $project->id, 'skills' => $project->skills]);
+            $skills = is_array($project->skills) ? $project->skills : json_decode($project->skills, true) ?? [];
+            if (!is_array($skills)) {
+                Log::warning('Invalid skills format for project', ['project_id' => $project->id, 'skills' => $project->skills]);
+                $skills = [];
+            }
+            foreach ($skills as $skillId) {
                 $skillMMR[$skillId] = ($skillMMR[$skillId] ?? $this->baseMMR) + 50;
                 $skill = Skill::find($skillId);
                 if ($skill) {
@@ -67,7 +74,13 @@ class MMRService
             $query->whereNotNull('completed_at');
         })->with('course')->get();
         foreach ($enrollments as $enrollment) {
-            foreach ($enrollment->course->skills ?? [] as $skillId) {
+            Log::info('Processing course skills', ['course_id' => $enrollment->course->id, 'skills' => $enrollment->course->skills]);
+            $skills = is_array($enrollment->course->skills) ? $enrollment->course->skills : json_decode($enrollment->course->skills, true) ?? [];
+            if (!is_array($skills)) {
+                Log::warning('Invalid skills format for course', ['course_id' => $enrollment->course->id, 'skills' => $enrollment->course->skills]);
+                $skills = [];
+            }
+            foreach ($skills as $skillId) {
                 $skillMMR[$skillId] = ($skillMMR[$skillId] ?? $this->baseMMR) + 30;
                 $skill = Skill::find($skillId);
                 if ($skill) {
@@ -89,10 +102,15 @@ class MMRService
         }
 
         // Educations
-        $educations = $user->educations()->where('verified', true)->get();
+        $educations = $user->educations()->get(); // Removed 'where('verified', true)' since column doesn't exist
         foreach ($educations as $education) {
             $skillMMR[$education->id] = ($skillMMR[$education->id] ?? $this->baseMMR) + 50; // Base points for education
-            foreach ($education->skills ?? [] as $skillId) {
+            $skills = is_array($education->skills) ? $education->skills : json_decode($education->skills, true) ?? [];
+            if (!is_array($skills)) {
+                Log::warning('Invalid skills format for education', ['education_id' => $education->id, 'skills' => $education->skills]);
+                $skills = [];
+            }
+            foreach ($skills as $skillId) {
                 $skillMMR[$skillId] = ($skillMMR[$skillId] ?? $this->baseMMR) + 20;
                 $skill = Skill::find($skillId);
                 if ($skill) {
@@ -151,8 +169,12 @@ class MMRService
             }
 
             $events = $response->json();
-            $githubMMR = 0;
+            if (!is_array($events)) {
+                Log::error('GitHub API returned non-array response', ['user_id' => $user->id, 'response' => $events]);
+                return $user->mmr->github ?? 0;
+            }
 
+            $githubMMR = 0;
             foreach ($events as $event) {
                 $createdAt = Carbon::parse($event['created_at']);
                 if ($createdAt->diffInMonths(Carbon::now()) < 1) {
@@ -197,8 +219,7 @@ class MMRService
 
     public function updateMMRForEducation(Education $education): void
     {
-        if ($education->verified) {
-            $this->recalculateMMR($education->user);
-        }
+        // Removed verification check since 'verified' column doesn't exist
+        $this->recalculateMMR($education->user);
     }
 }

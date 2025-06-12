@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\CourseEnrollment;
+use App\Models\Skill;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -13,8 +14,17 @@ class SpecificCourseController extends Controller
     public function homeCourses()
     {
         $courses = Course::with('instructor')
-            ->withCount('enrollments') // adds enrollments_count
+            ->withCount('enrollments')
             ->get();
+
+        foreach ($courses as $course) {
+            // Parse skills as array
+            $skills = is_array($course->skills) ? $course->skills : json_decode($course->skills, true) ?? [];
+            $course->skills_data = Skill::whereIn('id', $skills)->get();
+
+            // Exclude video from response
+            unset($course->video);
+        }
 
         return response()->json([
             'success' => true,
@@ -22,6 +32,7 @@ class SpecificCourseController extends Controller
             'data' => $courses,
         ]);
     }
+
 
     public function userCourses(Request $request)
     {
@@ -100,6 +111,13 @@ class SpecificCourseController extends Controller
                 'data' => null,
             ], 404);
         }
+
+        // Convert JSON skills to array
+        $skills = is_array($course->skills) ? $course->skills : json_decode($course->skills, true) ?? [];
+        $course->skills_data = Skill::whereIn('id', $skills)->get();
+
+        // Hide video field from response
+        unset($course->video);
 
         return response()->json([
             'success' => true,

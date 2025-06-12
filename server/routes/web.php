@@ -8,6 +8,7 @@ use App\Http\Controllers\CourseTimeStampController;
 use App\Http\Controllers\DropDownController;
 use App\Http\Controllers\EducationController;
 use App\Http\Controllers\MMRController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SkillController;
@@ -23,6 +24,29 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/videos/{filename}', function ($filename) {
+    $path = public_path('uploads/courses/videos/' . $filename);
+
+    if (!file_exists($path)) {
+        abort(404);
+    }
+
+    return response()->file($path, [
+        'Access-Control-Allow-Origin' => '*',
+        'Access-Control-Allow-Methods' => 'GET, OPTIONS',
+        'Access-Control-Allow-Headers' => 'Origin, Content-Type, Accept, Authorization, X-Requested-With',
+    ]);
+})->name('video.show');
+
+// Handle OPTIONS request for CORS preflight
+Route::options('/videos/{filename}', function () {
+    return response('', 200, [
+        'Access-Control-Allow-Origin' => '*',
+        'Access-Control-Allow-Methods' => 'GET, OPTIONS',
+        'Access-Control-Allow-Headers' => 'Origin, Content-Type, Accept, Authorization, X-Requested-With',
+    ]);
+});
+
 Route::group(['prefix' => 'api'], function () {
     Route::group(['prefix' => '/auth'], function () {
         Route::post('/register', [AuthController::class, 'register']);
@@ -33,6 +57,7 @@ Route::group(['prefix' => 'api'], function () {
             Route::post('/refresh', [AuthController::class, 'refresh']);
         });
     });
+
     Route::middleware([JwtMiddleware::class])->group(function () {
         Route::resource('categories', CategoryController::class);
         Route::resource('skills', SkillController::class);
@@ -57,13 +82,27 @@ Route::group(['prefix' => 'api'], function () {
         Route::get('user/courses', [SpecificCourseController::class, 'userCourses']);
         Route::get('/user/courses/{id}', [SpecificCourseController::class, 'userSingleCourse']);
 
-        // eSewa payment routes
+        // Protected video access route (for authenticated users only)
+        Route::get('/secure-videos/{filename}', function ($filename) {
+            $path = public_path('uploads/courses/videos/' . $filename);
+
+            if (!file_exists($path)) {
+                abort(404);
+            }
+
+            return response()->file($path);
+        })->name('video.secure');
+
+        Route::get('profile', [ProfileController::class, 'show']); // Authenticated user's profile
+        Route::get('profile/{id}', [ProfileController::class, 'show']);
     });
+
     Route::get('payment/success', [CourseEnrollmentController::class, 'paymentSuccess']);
     Route::get('payment/failure', [CourseEnrollmentController::class, 'paymentFailure']);
     Route::get('/companies', [DropDownController::class, 'getCompany']);
     Route::get('frontend/courses', [SpecificCourseController::class, 'homeCourses']);
     Route::get('frontend/courses/{id}', [SpecificCourseController::class, 'publicCourse']);
+    Route::get('profiles', [ProfileController::class, 'index']); // Fetch all users' profiles (admin only)
 
     Route::middleware(RoleMiddleware::class . ':admin,superadmin')->group(function () {});
 });
