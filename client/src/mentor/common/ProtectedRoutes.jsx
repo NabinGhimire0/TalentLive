@@ -16,10 +16,10 @@ export default function ProtectedRoutes({ children }) {
     return <Navigate to="/" replace />;
   }
 
-  if (user?.role !== "superadmin" && user?.role !== "admin") {
+  if (user?.role !== "mentor") {
     return <Navigate to="/" replace />;
   }
-  
+
 
 
   return children;

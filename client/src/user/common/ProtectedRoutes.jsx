@@ -16,7 +16,7 @@ export default function ProtectedRoutes({ children }) {
     return <Navigate to="/" replace />;
   }
 
-  if (user?.role !== "superadmin" && user?.role !== "admin") {
+  if (user?.role !== "individual") {
     return <Navigate to="/" replace />;
   }
   

@@ -406,6 +406,29 @@ export default function SuperAdminSidebar({ open, setOpen }) {
         icon: <FaGraduationCap />,
         subLinks: [],
       },
+      {
+        name: "work-history",
+        href: "/user/work-history",
+        icon: <FaGraduationCap />,
+        sub: [
+          {
+            name: "All works",
+            href: "/user/work-history",
+            subLinks: [],
+          },
+          {
+            name: "Add Work History",
+            href: "/user/work-history/create",
+            subLinks: [],
+          },
+        ],
+      },
+      {
+        name: "cources",
+        href: "/user/cources",
+        icon: <FaGraduationCap />,
+       
+      },
     // ],
   // },
 ];
@@ -435,7 +458,7 @@ export default function SuperAdminSidebar({ open, setOpen }) {
               !open && "opacity-0 lg:opacity-100 lg:text-sm"
             }`}
           >
-            {open ? "Super Admin" : "Admin"}
+            {open ? "User Dashboard" : "User"}
           </h2>
         </div>
 

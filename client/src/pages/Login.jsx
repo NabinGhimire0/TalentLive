@@ -11,8 +11,8 @@ const Login = () => {
     const { loading } = useSelector((state) => state.auth);
 
     const [credentials, setCredentials] = useState({
-        email: '',
-        password: '',
+        email: 'nabinghimire1@gmail.com',
+        password: 'admin123',
     });
     const [showPassword, setShowPassword] = useState(false);
 
@@ -31,14 +31,28 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const res = await dispatch(login(credentials));
-
+        console.log(res.payload?.data?.user)
+        console.log(res?.payload?.data.user?.role)
+        // console.log()
         if (
             res?.payload?.success &&
-            (res?.payload?.user?.role === 'admin' || res?.payload?.user?.role === 'superadmin')
+            (res?.payload?.data?.user?.role === 'admin' || res?.payload?.data?.user?.role === 'superadmin')
         ) {
             localStorage.setItem('token', res.payload.token);
             toast.success(res.payload.message || 'Login successful');
+            navigate('/admin');
+        }else if( res?.payload?.success &&
+            (res?.payload?.data?.user?.role === "individual" )){
+            localStorage.setItem('token', res.payload.token);
+            toast.success(res.payload.message || 'Login successful');
+            navigate('/user');
+            
+        }else if( res?.payload?.success &&
+            (res?.payload?.data?.user?.role === 'mentor' )){
+            localStorage.setItem('token', res.payload.token);
+            toast.success(res.payload.message || 'Login successful');
             navigate('/mentor');
+            
         } else {
             toast.error(res?.payload?.message || 'Login failed');
         }

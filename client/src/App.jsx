@@ -16,6 +16,17 @@ import Skills from './user/pages/Skills';
 import Projects from './user/pages/Projects';
 import Tutorials from './user/pages/Tutorials';
 import Internships from './user/pages/Internships';
+import MentorStudents from './mentor/pages/MentorStudents';
+import MentorTutorials from './mentor/pages/MentorTutorials';
+import SkillVerification from './mentor/pages/SkillVerification';
+import MentorAnalytics from './mentor/pages/MentorAnalytics';
+import CategoriesManager from './mentor/pages/CategoriesManager';
+import SkillsManager from './mentor/pages/SkillManager';
+import CreateProject from './user/pages/createProject';
+import AllWorkHistory from './user/pages/workhistory/AllWorkHistory';
+import CreateWorkHistory from './user/pages/workhistory/CreateWorkHistory';
+import WatchVideos from './user/pages/WatchVideos';
+import HomePage from './pages/HomePage';
 
 function App() {
 
@@ -23,22 +34,37 @@ function App() {
     <>
       <Router>
         <Routes>
-    <Route path="" index element={<VideoAnalyticsTracker />} />
+          <Route path="" index element={<HomePage  />} />
           <Route path='/user' element={<UserLayout />} >
-          <Route path="profile" element={<Profile />} />
-          <Route path="skills" element={<Skills />} />
-          <Route path="projects" element={<Projects />} />
-          <Route path="tutorials" element={<Tutorials />} />
-          <Route path="internships" element={<Internships />} />
-          <Route path="*" element={<> No Routes Found</>} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="skills" element={<Skills />} />
+            <Route path="projects" element={<Projects />} />
+            <Route path="projects/create" element={<CreateProject />} />
+            <Route path="tutorials" element={<Tutorials />} />
+            <Route path="tutorials/:id" element={<WatchVideos />} />
+            <Route path="work-history" element={<AllWorkHistory />} />
+            <Route path="work-history/create" element={<CreateWorkHistory />} />
 
-          
+            <Route path="internships" element={<Internships />} />
+            <Route path="*" element={<> No Routes Found</>} />
+
+
           </Route>
           <Route path="/login" element={<Login />} />
           <Route path="/mentor" element={<MentorLayout />}>
+
+          <Route path="" index element={<MentorAnalytics  />} />
+          <Route path="courses" index element={<MentorAnalytics  />} />
+          <Route path="categories" element={<CategoriesManager  />} />
+          <Route path="skills" element={<SkillsManager  />} />
+
+          <Route path="students" element={<MentorStudents />} />
+          <Route path="tutorials" element={<MentorTutorials  />} />
+          <Route path="skill-verification" element={<SkillVerification  />} />
+          <Route path="analytics" element={<MentorAnalytics   />} />
             <Route path="*" element={<>dwla</>} />
           </Route>
-          
+
         </Routes>
       </Router>
     </>
