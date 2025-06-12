@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,7 +10,11 @@ class CourseEnrollment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'course_id', 'payment_id', 'payment_method', 'price',
+        'user_id',
+        'course_id',
+        'payment_id',
+        'payment_method',
+        'price',
     ];
 
     public function user()
@@ -24,6 +29,7 @@ class CourseEnrollment extends Model
 
     public function timeStamp()
     {
-        return $this->hasOne(CourseTimeStamp::class, 'course_id');
+        return $this->hasOne(CourseTimeStamp::class, 'course_id', 'course_id')
+            ->where('user_id', $this->user_id);
     }
 }

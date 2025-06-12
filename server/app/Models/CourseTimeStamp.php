@@ -9,7 +9,7 @@ class CourseTimeStamp extends Model
     use HasFactory;
 
     protected $fillable = [
-        'course_id', 'skipped_from', 'skipped_to', 'paused_at', 'resumed_at', 'completed_at',
+        'course_id',  'user_id', 'skipped_from', 'skipped_to', 'paused_at', 'resumed_at', 'completed_at',
     ];
 
     protected $casts = [

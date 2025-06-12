@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 use App\Models\CourseTimeStamp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class CourseTimeStampController extends Controller
 {
-
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -27,8 +27,10 @@ class CourseTimeStampController extends Controller
             ], 422);
         }
 
+        $user = JWTAuth::user();
+
         // Ensure user is enrolled
-        $enrollment = $request->user()->enrollments()->where('course_id', $request->course_id)->first();
+        $enrollment = $user->enrollments()->where('course_id', $request->course_id)->first();
         if (!$enrollment) {
             return response()->json([
                 'success' => false,
@@ -37,9 +39,15 @@ class CourseTimeStampController extends Controller
             ], 403);
         }
 
-        $timestamp = CourseTimeStamp::create($request->only([
-            'course_id', 'skipped_from', 'skipped_to', 'paused_at', 'resumed_at', 'completed_at'
-        ]));
+        $timestamp = CourseTimeStamp::create([
+            'user_id' => $user->id,
+            'course_id' => $request->course_id,
+            'skipped_from' => $request->skipped_from,
+            'skipped_to' => $request->skipped_to,
+            'paused_at' => $request->paused_at,
+            'resumed_at' => $request->resumed_at,
+            'completed_at' => $request->completed_at,
+        ]);
 
         return response()->json([
             'success' => true,
@@ -59,9 +67,11 @@ class CourseTimeStampController extends Controller
             ], 404);
         }
 
-        // Ensure user is enrolled
-        $enrollment = $request->user()->enrollments()->where('course_id', $timestamp->course_id)->first();
-        if (!$enrollment && !$request->user()->hasRole('admin')) {
+        $user = JWTAuth::user();
+
+        // Ensure user is enrolled or admin
+        $enrollment = $user->enrollments()->where('course_id', $timestamp->course_id)->first();
+        if (!$enrollment && !$user->hasRole('admin')) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized',

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\Skill;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -12,6 +13,12 @@ class CourseController extends Controller
     public function index()
     {
         $courses = Course::with(['instructor', 'enrollments'])->get();
+
+        foreach ($courses as $course) {
+            $skills = is_array($course->skills) ? $course->skills : json_decode($course->skills, true) ?? [];
+            $course->skills_data = Skill::whereIn('id', $skills)->get();
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Courses retrieved successfully',
@@ -50,10 +57,12 @@ class CourseController extends Controller
         $course->instructor_id = $request->user()->id;
         $course->title = $request->title;
         $course->description = $request->description;
-        $course->skills = json_encode($request->skills);
+        $course->skills = $request->skills;
         $course->price = $request->price;
         $course->video = $videoPath;
         $course->save();
+
+        $course->skills_data = Skill::whereIn('id', $course->skills)->get();
 
         return response()->json([
             'success' => true,
@@ -65,6 +74,7 @@ class CourseController extends Controller
     public function show($id)
     {
         $course = Course::with(['instructor', 'enrollments'])->find($id);
+
         if (!$course) {
             return response()->json([
                 'success' => false,
@@ -72,6 +82,8 @@ class CourseController extends Controller
                 'data' => null
             ], 404);
         }
+
+        $course->skills_data = Skill::whereIn('id', $course->skills ?? [])->get();
 
         return response()->json([
             'success' => true,
@@ -110,7 +122,6 @@ class CourseController extends Controller
             ], 422);
         }
 
-        // Update fields if provided
         if ($request->has('title')) {
             $course->title = $request->title;
         }
@@ -120,14 +131,13 @@ class CourseController extends Controller
         }
 
         if ($request->has('skills')) {
-            $course->skills = json_encode($request->skills);
+            $course->skills = $request->skills;
         }
 
         if ($request->has('price')) {
             $course->price = $request->price;
         }
 
-        // Handle video upload
         if ($request->hasFile('video')) {
             $video = $request->file('video');
             $videoName = time() . '.' . $video->getClientOriginalExtension();
@@ -136,6 +146,7 @@ class CourseController extends Controller
         }
 
         $course->save();
+        $course->skills_data = Skill::whereIn('id', $course->skills ?? [])->get();
 
         return response()->json([
             'success' => true,
@@ -144,17 +155,19 @@ class CourseController extends Controller
         ]);
     }
 
-
     public function destroy(Request $request, $id)
     {
         $course = Course::find($id);
-        if (!$course || (!$request->user()->hasRole('admin') && $course->instructor_id !== $request->user()->id)) {
+        $user = JWTAuth::user();
+
+        if (!$course || ($user->role !== 'admin' && $course->instructor_id !== $user->id)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Course not found or unauthorized',
                 'data' => null
             ], 404);
         }
+
 
         $course->delete();
 

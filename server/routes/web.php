@@ -11,6 +11,7 @@ use App\Http\Controllers\MMRController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SkillController;
+use App\Http\Controllers\SpecificCourseController;
 use App\Http\Controllers\WorkHistoryController;
 use App\Http\Middleware\CorsMiddleware;
 use App\Http\Middleware\JwtMiddleware;
@@ -53,9 +54,16 @@ Route::group(['prefix' => 'api'], function () {
 
         // Search route
         Route::post('search/individuals', [SearchController::class, 'searchIndividuals']);
-    });
-    Route::get('/companies', [DropDownController::class, 'getCompany']);
+        Route::get('user/courses', [SpecificCourseController::class, 'userCourses']);
+        Route::get('/user/courses/{id}', [SpecificCourseController::class, 'userSingleCourse']);
 
+        // eSewa payment routes
+    });
+    Route::get('payment/success', [CourseEnrollmentController::class, 'paymentSuccess']);
+    Route::get('payment/failure', [CourseEnrollmentController::class, 'paymentFailure']);
+    Route::get('/companies', [DropDownController::class, 'getCompany']);
+    Route::get('frontend/courses', [SpecificCourseController::class, 'homeCourses']);
+    Route::get('frontend/courses/{id}', [SpecificCourseController::class, 'publicCourse']);
 
     Route::middleware(RoleMiddleware::class . ':admin,superadmin')->group(function () {});
 });

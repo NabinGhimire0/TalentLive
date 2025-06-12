@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('course_id')->constrained();
             $table->string('payment_id')->nullable();
             $table->string('payment_method')->nullable();
-            $table->string('price')->nullable();
+            $table->decimal('price', 8, 2)->nullable();
             $table->timestamps();
         });
     }
