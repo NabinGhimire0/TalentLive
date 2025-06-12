@@ -103,6 +103,16 @@ class AuthController extends Controller
         ]);
     }
 
+    public function users()
+    {
+        $users = User::all();
+        return response()->json([
+            'success' => true,
+            'message' => 'Users retrieved successfully.',
+            'data'    => $users,
+        ]);
+    }
+
     // Logout
     public function logout()
     {

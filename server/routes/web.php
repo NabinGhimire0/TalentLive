@@ -13,6 +13,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SkillController;
 use App\Http\Controllers\SpecificCourseController;
+use App\Http\Controllers\VideoCallController;
 use App\Http\Controllers\WorkHistoryController;
 use App\Http\Middleware\CorsMiddleware;
 use App\Http\Middleware\JwtMiddleware;
@@ -59,6 +60,7 @@ Route::group(['prefix' => 'api'], function () {
     });
 
     Route::middleware([JwtMiddleware::class])->group(function () {
+        Route::get('/user', [AuthController::class, 'users']);
         Route::resource('categories', CategoryController::class);
         Route::resource('skills', SkillController::class);
         Route::resource('projects', ProjectController::class);
@@ -95,6 +97,11 @@ Route::group(['prefix' => 'api'], function () {
 
         Route::get('profile', [ProfileController::class, 'show']); // Authenticated user's profile
         Route::get('profile/{id}', [ProfileController::class, 'show']);
+
+
+        Route::get('contacts', [VideoCallController::class, 'getContacts']);
+        Route::post('video-call/request/{user}', [VideoCallController::class, 'requestVideoCall']);
+        Route::post('video-call/request/status/{user}', [VideoCallController::class, 'requestVideoCallStatus']);
     });
 
     Route::get('payment/success', [CourseEnrollmentController::class, 'paymentSuccess']);

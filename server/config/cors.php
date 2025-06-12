@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'paths' => ['api/*', 'sanctum/csrf-cookie'], // Routes affected by CORS
+    'paths' => ['api/*', 'sanctum/csrf-cookie','broadcasting/auth'], // Routes affected by CORS
     'access_control_allow_origin' => ['*'],
     'Access-Control-Allow-Methods' =>['GET, POST, OPTIONS'],
     'Access-Control-Allow-Headers'=> ['Origin, Content-Type, Accept, Authorization'],

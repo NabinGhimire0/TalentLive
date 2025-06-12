@@ -8,12 +8,12 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://192.168.13.127:8000',
+        target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false
       },
       '/uploads': {
-        target: 'http://192.168.13.127:8000',
+        target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false
       }

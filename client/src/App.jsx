@@ -29,6 +29,8 @@ import WatchVideos from './user/pages/WatchVideos';
 import HomePage from './pages/HomePage';
 import CoursesPage from './pages/CoursesPage';
 import CourcesDetails from './pages/CourcesDetails';
+import Contacts from './pages/Contacts';
+import ProfilesPage from './pages/ProfilesPage';
 
 function App() {
 
@@ -38,6 +40,8 @@ function App() {
         <Routes>
           <Route path="" index element={<HomePage  />} />
           <Route path="/courses" index element={<CoursesPage  />} />
+          <Route path="/user-profile" index element={<ProfilesPage  />} />
+          <Route path="/contact" index element={<Contacts/>} />
           <Route path="/courses/:id" index element={<CourcesDetails  />} />
 
           <Route path='/user' element={<UserLayout />} >

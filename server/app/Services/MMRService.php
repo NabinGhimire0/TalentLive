@@ -203,6 +203,18 @@ class MMRService
         }
     }
 
+/*************  ✨ Windsurf Command ⭐  *************/
+/**
+ * Updates the MMR for a course enrollment. 
+ *
+ * If the course enrollment has a timestamp indicating completion, 
+ * recalculates the MMR for the associated user.
+ *
+ * @param CourseEnrollment $enrollment The course enrollment instance.
+ * @return void
+ */
+
+/*******  9db87a46-adfd-4a0d-8464-0016555c239b  *******/
     public function updateMMRForCourse(CourseEnrollment $enrollment): void
     {
         if ($enrollment->timeStamp && $enrollment->timeStamp->completed_at) {
