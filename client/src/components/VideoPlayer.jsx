@@ -609,8 +609,11 @@ const VideoPlayerTracker = () => {
     timestamp: null
   }
 
-  const baseUrl = "http://192.168.13.127:8000/"
-  const videoUrl = `${baseUrl}${courseData.course.video}`
+  const baseUrl = import.meta.env.VITE_API_URL
+  const split  = courseData.course.video.split("/")
+
+  const videoUrl = `${baseUrl}videos/${split.pop()}`
+  console.log(videoUrl)
 
   // Logging function
   const logActivity = useCallback((activity, data = {}) => {
@@ -731,7 +734,7 @@ const VideoPlayerTracker = () => {
 
       <div className="mb-6 bg-black rounded-lg overflow-hidden">
         <ReactPlayer
-        //   ref={playerRef}
+          ref={playerRef}
           url={videoUrl}
           controls
           width="100%"

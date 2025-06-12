@@ -29,8 +29,8 @@ const Tutorials = () => {
   }, []);
 
   const startWatching = (course) => {
-   console.log(course.id)
-   navigate(`/user/tutorials/${course.course.id}`)
+    console.log(course.id)
+    navigate(`/user/tutorials/${course.course.id}`)
   };
 
   const updateProgress = (courseId, progress) => {
@@ -105,37 +105,40 @@ const Tutorials = () => {
 
   const esewaCall = (formData) => {
     console.log(formData);
-    const path = "https://rc-epay.esewa.com.np/api/epay/main/v2/form";
+
+    const paymentUrl = formData.payment_url;
+    const data = formData.form_data;
 
     const form = document.createElement("form");
     form.setAttribute("method", "POST");
-    form.setAttribute("action", path);
+    form.setAttribute("action", paymentUrl);
 
-    for (const key in formData) {
+    for (const key in data) {
       const hiddenField = document.createElement("input");
       hiddenField.setAttribute("type", "hidden");
       hiddenField.setAttribute("name", key);
-      hiddenField.setAttribute("value", formData[key]);
+      hiddenField.setAttribute("value", data[key]);
       form.appendChild(hiddenField);
     }
 
-    document.body.appendChild(form);
-    form.submit();
+    document.body.appendChild(form); // ✅ Important: attach to DOM first
+    form.submit(); // ✅ Then submit
   };
+
   async function handleEnroll(enrollData) {
 
     const formdata = new FormData();
-    console.log(enrollData)
-    console.log({
-      course_id: enrollData?.course?.id
+    // console.log(enrollData)
+    // console.log({
+    //   course_id: enrollData?.course?.id
 
-    })
+    // })
     formdata.append("course_id", enrollData?.course?.id)
     // formdata.append("course_id", enrollData.id)
     const data = await api.post("api/course-enrollments", formdata)
-
+    console.log(data)
     if (data.data.success) {
-      esewaCall(data.data.data.from_data);
+      esewaCall(data.data.data);
 
     }
   }

@@ -27,6 +27,8 @@ import AllWorkHistory from './user/pages/workhistory/AllWorkHistory';
 import CreateWorkHistory from './user/pages/workhistory/CreateWorkHistory';
 import WatchVideos from './user/pages/WatchVideos';
 import HomePage from './pages/HomePage';
+import CoursesPage from './pages/CoursesPage';
+import CourcesDetails from './pages/CourcesDetails';
 
 function App() {
 
@@ -35,6 +37,9 @@ function App() {
       <Router>
         <Routes>
           <Route path="" index element={<HomePage  />} />
+          <Route path="/courses" index element={<CoursesPage  />} />
+          <Route path="/courses/:id" index element={<CourcesDetails  />} />
+
           <Route path='/user' element={<UserLayout />} >
             <Route path="profile" element={<Profile />} />
             <Route path="skills" element={<Skills />} />
