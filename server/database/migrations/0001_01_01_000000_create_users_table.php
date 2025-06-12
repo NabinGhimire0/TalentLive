@@ -13,18 +13,18 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->index(); // Full name, indexed for search
-            $table->string('email')->unique()->index(); // Email for login, unique
-            $table->string('password'); // Hashed password for JWT auth
-            $table->string('location')->nullable()->index(); // City/country for talent discovery
-            $table->enum('role', ['individual', 'mentor', 'industry', 'admin'])->default('individual')->index(); // User role
-            $table->string('github_id')->nullable()->unique()->index(); // GitHub user ID for API integration
-            $table->text('bio')->nullable(); // Short bio to showcase expertise
-            $table->string('profile_picture')->nullable(); // URL or path to profile image
-            $table->rememberToken(); // For "remember me" functionality
-            $table->timestamp('email_verified_at')->nullable(); // For email verification
-            $table->timestamps(); // Created_at and updated_at
-            $table->softDeletes(); // Soft delete for user recovery
+            $table->string('name')->index();
+            $table->string('email')->unique()->index();
+            $table->string('password');
+            $table->string('location')->nullable()->index();
+            $table->enum('role', ['individual', 'mentor', 'industry', 'admin'])->default('individual')->index();
+            $table->string('github_id')->nullable()->unique()->index();
+            $table->text('bio')->nullable();
+            $table->string('profile_picture')->nullable();
+            $table->rememberToken();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->timestamps();
+            $table->softDeletes(); 
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

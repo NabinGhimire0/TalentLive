@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->string('title');
             $table->text('description');
-            $table->array('skills');
-            $table->array('demo')->nullable();
+            $table->json('skills');
+            $table->json('demo')->nullable();
             $table->string('project_link')->nullable();
             $table->string('duration')->nullable();
             $table->enum('status',['ongoing','completed'])->default('ongoing');

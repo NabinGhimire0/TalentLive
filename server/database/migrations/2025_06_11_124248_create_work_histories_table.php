@@ -14,9 +14,10 @@ return new class extends Migration
         Schema::create('work_histories', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained();
-            $table->foreign('company_id')->constrained('users');
+            $table->foreignId('company_id')->constrained('users');
             $table->string('position');
-            $table->text('responsibilties');
+            $table->text('responsibilities');
+            $table->enum('type',['job','internship'])->default('job');
             $table->string('start_date');
             $table->string('end_date')->nullable();
             $table->boolean('verified')->default(0);

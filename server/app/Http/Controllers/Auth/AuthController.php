@@ -44,7 +44,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'location' => $request->location,
-            'role' => 'individual',
+            'role' => 'admin',
             'github_id' => $request->github_id,
             'bio' => $request->bio,
             'profile_picture' => $profileImagePath,
