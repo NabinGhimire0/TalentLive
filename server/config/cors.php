@@ -1,20 +1,12 @@
 <?php
+
 return [
-
-    'paths' => ['api/*'],
-
-    'allowed_methods' => ['*'],
-
-    'allowed_origins' => ['http://localhost:5173'],
-
+    'paths' => ['api/*', 'sanctum/csrf-cookie'], // Routes affected by CORS
+    'allowed_methods' => ['*'], // Allow all HTTP methods
+    'allowed_origins' => ['*'], // Allow all origins
     'allowed_origins_patterns' => [],
-
-    'allowed_headers' => ['*'],
-
+    'allowed_headers' => ['*'], // Allow all headers
     'exposed_headers' => [],
-
-    'max_age' => 0,
-
-    'supports_credentials' => true,
-
+    'max_age' => 0, // Preflight request cache duration (seconds)
+    'supports_credentials' => true, // IMPORTANT: Set to true when using credentials
 ];

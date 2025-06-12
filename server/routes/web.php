@@ -5,6 +5,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\CourseEnrollmentController;
 use App\Http\Controllers\CourseTimeStampController;
+use App\Http\Controllers\DropDownController;
 use App\Http\Controllers\EducationController;
 use App\Http\Controllers\MMRController;
 use App\Http\Controllers\ProjectController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\WorkHistoryController;
 use App\Http\Middleware\CorsMiddleware;
 use App\Http\Middleware\JwtMiddleware;
 use App\Http\Middleware\RoleMiddleware;
+use Illuminate\Http\Middleware\HandleCors;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -52,6 +54,7 @@ Route::group(['prefix' => 'api'], function () {
         // Search route
         Route::post('search/individuals', [SearchController::class, 'searchIndividuals']);
     });
+    Route::get('/companies', [DropDownController::class, 'getCompany']);
 
 
     Route::middleware(RoleMiddleware::class . ':admin,superadmin')->group(function () {});
