@@ -14,18 +14,24 @@ TalentLive is a dynamic web platform designed to connect users for learning, col
 - Contributing
 - License
 - Contact
+  ![Screenshot 2025-06-12 225240](https://github.com/user-attachments/assets/b1b9d668-b60a-47f7-bcfe-603f239858d2)
+
   
-![Uploading Screenshot 2025-06-12 225240.png…]()
+![Screenshot 2025-06-12 224856](https://github.com/user-attachments/assets/cc98deb5-dc10-43d0-ad32-f7dd3ec03984)
 
-![Uploading Screenshot 2025-06-12 224856.png…]()
 
-![Uploading Screenshot 2025-06-12 224930.png…]()
+![Screenshot 2025-06-12 224930](https://github.com/user-attachments/assets/c5132fb7-4f39-4cdb-83e7-f56eea4501f0)
 
-![Uploading Screenshot 2025-06-12 224944.png…]()
 
-![Uploading Screenshot 2025-06-12 225146.png…]()
+![Screenshot 2025-06-12 224944](https://github.com/user-attachments/assets/3207db0d-4b91-426f-bf9d-7eeac8fa75d2)
 
-![Screenshot 2025-06-12 225200](https://github.com/user-attachments/assets/f4e01f26-d3bb-4a89-aa0c-c2d90100896d)
+![Screenshot 2025-06-12 225146](https://github.com/user-attachments/assets/0a097671-1c3c-4179-a65d-1abb06308a33)
+
+![Screenshot 2025-06-12 225200](https://github.com/user-attachments/assets/62dcaa5a-eee2-496f-9352-15d5e3030982)
+
+
+
+
 
 ## Features
 
