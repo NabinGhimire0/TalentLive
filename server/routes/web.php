@@ -99,9 +99,9 @@ Route::group(['prefix' => 'api'], function () {
         Route::get('profile/{id}', [ProfileController::class, 'show']);
 
 
-        Route::get('contacts', [VideoCallController::class, 'getContacts']);
-        Route::post('video-call/request/{user}', [VideoCallController::class, 'requestVideoCall']);
-        Route::post('video-call/request/status/{user}', [VideoCallController::class, 'requestVideoCallStatus']);
+        Route::get('/contacts', [VideoCallController::class, 'getContacts']);
+        Route::post('/video-call/request/{userId}', [VideoCallController::class, 'requestVideoCall']);
+        Route::post('/video-call/status/{userId}', [VideoCallController::class, 'requestVideoCallStatus']);
     });
 
     Route::get('payment/success', [CourseEnrollmentController::class, 'paymentSuccess']);

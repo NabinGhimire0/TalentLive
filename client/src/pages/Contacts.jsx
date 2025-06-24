@@ -64,46 +64,64 @@ const Contacts = () => {
     setCallDuration(0);
   };
 
-  // Initialize Peer instance once
+  // Initialize Peer instance
   useEffect(() => {
-    peer.current = new Peer();
+    peer.current = new Peer({
+      // Uncomment to use local PeerJS server
+      // host: 'localhost',
+      // port: 9000,
+      // path: '/',
+    });
 
     peer.current.on("open", (id) => {
       console.log("Peer ID:", id);
     });
 
-    // Handle incoming calls
     peer.current.on("call", (call) => {
+      console.log("Received incoming call:", { caller: call.peer });
       peerCall.current = call;
       setCallStatus("connecting");
 
-      // Access local media
       navigator.mediaDevices
         .getUserMedia({ video: isVideoEnabled, audio: isAudioEnabled })
         .then((stream) => {
+          console.log("Local stream obtained for answering call");
           localStream.current = stream;
           if (localVideo.current) localVideo.current.srcObject = stream;
           call.answer(stream);
 
           call.on("stream", (remoteStream) => {
+            console.log("Received remote stream for incoming call");
             if (remoteVideo.current) remoteVideo.current.srcObject = remoteStream;
             setCallStatus("connected");
             startCallTimer();
           });
 
           call.on("close", () => {
+            console.log("Incoming call closed");
             endCall();
             toast.info("Call ended");
+          });
+
+          call.on("error", (err) => {
+            console.error("PeerJS call error:", err);
+            toast.error("Call error: " + err.message);
+            setCallStatus("ended");
+            endCall();
           });
         })
         .catch((err) => {
           console.error("Media devices error:", err);
-          toast.error("Failed to access camera or microphone");
+          toast.error("Failed to access camera or microphone: " + err.message);
           setCallStatus("ended");
         });
     });
 
-    // Cleanup Peer on unmount
+    peer.current.on("error", (err) => {
+      console.error("PeerJS error:", err);
+      toast.error("PeerJS error: " + err.message);
+    });
+
     return () => {
       stopCallTimer();
       if (peerCall.current) peerCall.current.close();
@@ -116,16 +134,15 @@ const Contacts = () => {
     async function fetchData() {
       try {
         setLoading(true);
-
-        const userResponse = await api.get("/api/user");
-        setAuth(userResponse.data);
-
+        const userResponse = await api.get("/api/auth/me");
+        console.log("User API response:", userResponse.data);
+        setAuth(userResponse.data.data); // Extract nested user object
         const contactsResponse = await api.get("/api/contacts");
+        console.log("Contacts API response:", contactsResponse.data);
         setUsers(contactsResponse.data.data || []);
       } catch (error) {
         console.error("Fetch error:", error.response?.data || error.message);
         toast.error(error.response?.data?.message || "Failed to load data");
-
         if (error.response?.status === 401) {
           localStorage.removeItem("token");
           navigate("/login");
@@ -147,47 +164,47 @@ const Contacts = () => {
 
   // Initialize Echo and listen for video call events
   useEffect(() => {
-    if (!auth) return;
+    if (!auth || !auth.id) {
+      console.log("Skipping Echo initialization: auth or auth.id is missing", { auth });
+      return;
+    }
 
     let echoInstance;
     try {
       echoInstance = initializeEcho();
+      console.log('Subscribing to channel:', `video-call.${auth.id}`);
+      const channel = echoInstance.private(`video-call.${auth.id}`);
+
+      channel.listen("RequestVideoCall", (e) => {
+        console.log("Received RequestVideoCall event:", e);
+        if (isCalling) {
+          toast.info(`Incoming call from ${e.user.fromUser.name} ignored (already in call)`);
+          return;
+        }
+        setSelectedUser(e.user.fromUser);
+        setIsCalling(true);
+        setCallStatus("connecting");
+        toast.info(`Incoming call from ${e.user.fromUser.name}`);
+      });
+
+      channel.listen("RequestVideoCallStatus", (e) => {
+        console.log("Received RequestVideoCallStatus event:", e);
+        if (e.user.status === "accept") {
+          createConnection(e);
+          toast.success("Call accepted");
+        } else if (e.user.status === "reject") {
+          toast.info("Call rejected");
+          endCall();
+        }
+      });
+
+      return () => {
+        echoInstance.leave(`video-call.${auth.id}`);
+      };
     } catch (error) {
       console.error("Echo initialization error:", error.message);
       toast.error("Failed to initialize real-time connection");
-      return;
     }
-
-    const channel = echoInstance.private(`video-call.${auth.id}`);
-
-    // Incoming call request
-    channel.listen("RequestVideoCall", (e) => {
-      if (isCalling) {
-        toast.info(
-          `Incoming call from ${e.user.fromUser.name} ignored (already in call)`
-        );
-        return;
-      }
-      setSelectedUser(e.user.fromUser);
-      setIsCalling(true);
-      setCallStatus("connecting");
-      toast.info(`Incoming call from ${e.user.fromUser.name}`);
-    });
-
-    // Call status updates
-    channel.listen("RequestVideoCallStatus", (e) => {
-      if (e.user.status === "accept") {
-        createConnection(e);
-        toast.success("Call accepted");
-      } else if (e.user.status === "reject") {
-        toast.info("Call rejected");
-        endCall();
-      }
-    });
-
-    return () => {
-      echoInstance.leave(`video-call.${auth.id}`);
-    };
   }, [auth, isCalling]);
 
   // Initiate a call to selected user
@@ -196,14 +213,12 @@ const Contacts = () => {
 
     try {
       setCallStatus("connecting");
+      console.log("Initiating call to user:", selectedUser.id, "with Peer ID:", peer.current.id);
       await api.post(`/api/video-call/request/${selectedUser.id}`, {
         peerId: peer.current.id,
       });
       setIsCalling(true);
-
-      // Show local video stream
       await displayLocalVideo();
-
       toast.success("Call initiated");
     } catch (error) {
       console.error("Call error:", error.response?.data || error.message);
@@ -214,6 +229,7 @@ const Contacts = () => {
 
   // End the call and cleanup media streams
   const endCall = () => {
+    console.log("Ending call");
     if (peerCall.current) {
       peerCall.current.close();
       peerCall.current = null;
@@ -235,6 +251,7 @@ const Contacts = () => {
   // Access local media and display on video element
   const displayLocalVideo = async () => {
     try {
+      console.log("Accessing local media for video display");
       const stream = await navigator.mediaDevices.getUserMedia({
         video: isVideoEnabled,
         audio: isAudioEnabled,
@@ -242,18 +259,20 @@ const Contacts = () => {
       localStream.current = stream;
       if (localVideo.current) localVideo.current.srcObject = stream;
     } catch (err) {
-      console.error("Media devices error:", err);
-      toast.error("Failed to access camera or microphone");
+      console.error("Media devices error in displayLocalVideo:", err);
+      toast.error("Failed to access camera or microphone: " + err.message);
     }
   };
 
-  // Create outgoing PeerJS call connection once call accepted
+  // Create outgoing PeerJS call connection
   const createConnection = async (e) => {
     try {
+      console.log("Creating connection with peer ID:", e.user.peerId);
       const stream = await navigator.mediaDevices.getUserMedia({
         video: isVideoEnabled,
         audio: isAudioEnabled,
       });
+      console.log("Local stream obtained for outgoing call");
       localStream.current = stream;
       if (localVideo.current) localVideo.current.srcObject = stream;
 
@@ -261,18 +280,27 @@ const Contacts = () => {
       peerCall.current = call;
 
       call.on("stream", (remoteStream) => {
+        console.log("Received remote stream for outgoing call");
         if (remoteVideo.current) remoteVideo.current.srcObject = remoteStream;
         setCallStatus("connected");
         startCallTimer();
       });
 
       call.on("close", () => {
+        console.log("Outgoing call closed");
         endCall();
         toast.info("Call ended");
       });
+
+      call.on("error", (err) => {
+        console.error("Outgoing call error:", err);
+        toast.error("Call error: " + err.message);
+        setCallStatus("ended");
+      });
     } catch (err) {
-      console.error("Media devices error:", err);
-      toast.error("Failed to access camera or microphone");
+      console.error("Media devices error in createConnection:", err);
+      toast.error("Failed to access camera or microphone: " + err.message);
+      setCallStatus("ended");
     }
   };
 
@@ -283,6 +311,7 @@ const Contacts = () => {
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled;
         setIsVideoEnabled(videoTrack.enabled);
+        console.log("Video toggled:", videoTrack.enabled);
       }
     }
   };
@@ -294,9 +323,28 @@ const Contacts = () => {
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
         setIsAudioEnabled(audioTrack.enabled);
+        console.log("Audio toggled:", audioTrack.enabled);
       }
     }
   };
+
+  // Test media access on component mount
+  useEffect(() => {
+    const testMedia = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+        console.log("Media test successful, stream:", stream);
+        stream.getTracks().forEach(track => track.stop());
+      } catch (err) {
+        console.error("Media test failed:", err);
+        toast.error("Media test failed: " + err.message);
+      }
+    };
+    testMedia();
+  }, []);
 
   if (loading) {
     return (
@@ -316,11 +364,8 @@ const Contacts = () => {
       <div className="flex h-screen pt-16 max-w-7xl mx-auto">
         {/* Contacts Sidebar */}
         <div className="w-80 bg-white border-r border-slate-200 shadow-lg flex flex-col">
-          {/* Header */}
           <div className="p-6 border-b border-slate-200 bg-gradient-to-r from-blue-600 to-blue-700">
             <h1 className="text-xl font-bold text-white mb-4">Contacts</h1>
-            
-            {/* Search Bar */}
             <div className="relative">
               <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
               <input
@@ -332,8 +377,6 @@ const Contacts = () => {
               />
             </div>
           </div>
-
-          {/* Contacts List */}
           <div className="flex-1 overflow-y-auto">
             {filteredUsers.length === 0 ? (
               <div className="p-6 text-center text-slate-500">
@@ -381,7 +424,6 @@ const Contacts = () => {
             </div>
           ) : (
             <>
-              {/* Call Header */}
               <div className="p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
@@ -401,7 +443,6 @@ const Contacts = () => {
                       </div>
                     </div>
                   </div>
-
                   <div className="flex items-center space-x-3">
                     {!isCalling ? (
                       <button
@@ -420,27 +461,21 @@ const Contacts = () => {
                         End Call
                       </button>
                     )}
-                    
                     <button className="p-3 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
                       <EllipsisVerticalIcon className="h-5 w-5" />
                     </button>
                   </div>
                 </div>
               </div>
-
-              {/* Video Call Area */}
               <div className="flex-1 relative bg-slate-900 overflow-hidden">
                 {isCalling ? (
                   <>
-                    {/* Remote Video */}
                     <video
                       ref={remoteVideo}
                       autoPlay
                       playsInline
                       className="w-full h-full object-cover"
                     />
-                    
-                    {/* Local Video (Picture-in-Picture) */}
                     <div className="absolute top-6 right-6 w-64 h-48 bg-slate-800 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/20">
                       <video
                         ref={localVideo}
@@ -460,8 +495,6 @@ const Contacts = () => {
                         </div>
                       )}
                     </div>
-
-                    {/* Call Controls */}
                     <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
                       <div className="flex items-center space-x-4 bg-black/50 backdrop-blur-lg rounded-2xl p-4">
                         <button
@@ -474,7 +507,6 @@ const Contacts = () => {
                         >
                           <MicrophoneIcon className="h-6 w-6" />
                         </button>
-                        
                         <button
                           onClick={toggleVideo}
                           className={`p-4 rounded-full transition-all duration-200 ${
@@ -485,27 +517,60 @@ const Contacts = () => {
                         >
                           <VideoCameraIcon className="h-6 w-6" />
                         </button>
-                        
                         <button
                           onClick={endCall}
                           className="p-4 bg-red-600 hover:bg-red-700 text-white rounded-full transition-all duration-200"
                         >
                           <PhoneXMarkIcon className="h-6 w-6" />
                         </button>
-                        
                         <button className="p-4 bg-slate-700 hover:bg-slate-600 text-white rounded-full transition-all duration-200">
                           <SpeakerWaveIcon className="h-6 w-6" />
                         </button>
                       </div>
                     </div>
-
-                    {/* Connection Status Overlay */}
                     {callStatus === "connecting" && (
                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                         <div className="bg-white rounded-2xl p-8 text-center shadow-2xl">
                           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
                           <div className="text-lg font-semibold text-slate-800">Connecting...</div>
                           <div className="text-sm text-slate-600 mt-2">Please wait while we establish the connection</div>
+                          <div className="mt-4 flex space-x-4 justify-center">
+                            <button
+                              onClick={async () => {
+                                try {
+                                  await api.post(`/api/video-call/status/${selectedUser.id}`, {
+                                    peerId: peer.current.id,
+                                    status: "accept",
+                                  });
+                                  toast.success("Call accepted");
+                                } catch (error) {
+                                  console.error("Accept call error:", error);
+                                  toast.error("Failed to accept call");
+                                }
+                              }}
+                              className="px-4 py-2 bg-green-600 text-white rounded-lg"
+                            >
+                              Accept
+                            </button>
+                            <button
+                              onClick={async () => {
+                                try {
+                                  await api.post(`/api/video-call/status/${selectedUser.id}`, {
+                                    peerId: peer.current.id,
+                                    status: "reject",
+                                  });
+                                  endCall();
+                                  toast.info("Call rejected");
+                                } catch (error) {
+                                  console.error("Reject call error:", error);
+                                  toast.error("Failed to reject call");
+                                }
+                              }}
+                              className="px-4 py-2 bg-red-600 text-white rounded-lg"
+                            >
+                              Reject
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -516,7 +581,6 @@ const Contacts = () => {
                       <VideoCameraIcon className="h-24 w-24 mx-auto mb-6 text-slate-400" />
                       <h3 className="text-2xl font-semibold mb-2">No active call</h3>
                       <p className="text-slate-400 mb-8">Click "Start Call" to begin a video call with {selectedUser.name}</p>
-                      
                       <button
                         onClick={callUser}
                         className="flex items-center mx-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"

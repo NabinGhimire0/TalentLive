@@ -13,8 +13,7 @@ class JwtMiddleware
     public function handle($request, Closure $next)
     {
         try {
-            // First check the token validity
-            if (!$token = JWTAuth::parseToken()) {
+            if (! $token = JWTAuth::parseToken()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Token not provided',
@@ -22,10 +21,14 @@ class JwtMiddleware
                 ], 401);
             }
 
-            // Try to authenticate using the token
-            JWTAuth::authenticate();
+            $user = JWTAuth::authenticate();
 
-            return $next($request);
+            // Optionally attach the authenticated user to the request
+            $request->setUserResolver(function () use ($user) {
+                return $user;
+            });
+
+            return $next($request);  // <== You MUST call this to continue the request
         } catch (TokenExpiredException $e) {
             return response()->json([
                 'success' => false,
@@ -45,7 +48,5 @@ class JwtMiddleware
                 'data' => null
             ], 401);
         }
-
-        // return $next($request);
     }
 }

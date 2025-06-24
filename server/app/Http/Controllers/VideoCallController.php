@@ -16,7 +16,7 @@ class VideoCallController extends Controller
     {
         try {
             $user = User::findOrFail($userId);
-            $authUser = Auth::guard('api')->user();
+            $authUser = JWTAuth::user();
             if (!$authUser) {
                 return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
             }
@@ -44,7 +44,7 @@ class VideoCallController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Video call request error', ['error' => $e->getMessage()]);
-            return response()->json(['success' => false, 'message' => 'Request failed'], 500);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -52,17 +52,23 @@ class VideoCallController extends Controller
     {
         try {
             $user = User::findOrFail($userId);
-            $authUser = Auth::guard('api')->user();
+            $authUser = JWTAuth::user();
             if (!$authUser) {
                 return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
             }
 
             $peerId = $request->input('peerId');
-            $status = $request->input('status'); // 'accept' or 'reject'
+            $status = $request->input('status');
             if (!$peerId || !$status) {
                 return response()->json(['success' => false, 'message' => 'Peer ID and status are required'], 400);
             }
 
+            Log::info("Broadcasting RequestVideoCallStatus", [
+                'to_user_id' => $user->id,
+                'from_user_id' => $authUser->id,
+                'peer_id' => $peerId,
+                'status' => $status,
+            ]);
             broadcast(new RequestVideoCallStatus($user, $authUser, $peerId, $status));
 
             return response()->json([
